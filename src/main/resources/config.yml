@@ -1,0 +1,22 @@
+# DonutSMP Spawner Plugin Configuration
+
+# Enable or disable spawner stacking
+stacking-enabled: true
+
+# Maximum number of spawners that can be stacked
+max-stack-size: 64
+
+# Delay increment in milliseconds when using the delay buttons
+delay-increment: 100
+
+# Minimum delay in milliseconds
+min-delay: 0
+
+# Maximum delay in milliseconds
+max-delay: 20000
+
+# Allow breaking existing world spawners
+allow-break-existing-spawners: true
+
+# Require Silk Touch to mine spawners
+require-silk-touch: false
