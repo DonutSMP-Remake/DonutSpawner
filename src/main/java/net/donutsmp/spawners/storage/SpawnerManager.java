@@ -15,10 +15,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SpawnerManager {
     private final DonutSpawners plugin;
-    private final Map<Location, SpawnerData> spawners = new HashMap<>();
+    private final Map<Location, SpawnerData> spawners = new ConcurrentHashMap<>();
     private final File spawnersFile;
     private ProductionTask productionTask;
 
@@ -61,7 +62,7 @@ public class SpawnerManager {
 
         productionTask = new ProductionTask(this);
         long prodInterval = plugin.getConfig().getLong("settings.production_interval", 600L);
-        productionTask.runTaskTimerAsynchronously(plugin, 0, prodInterval);
+        productionTask.runTaskTimer(plugin, 0, prodInterval);
     }
 
     public void saveSpawners() {
@@ -76,7 +77,7 @@ public class SpawnerManager {
         }
 
         FileConfiguration config = new YamlConfiguration();
-        for (Map.Entry<Location, SpawnerData> entry : spawners.entrySet()) {
+        for (Map.Entry<Location, SpawnerData> entry : new HashMap<>(spawners).entrySet()) {
             Location loc = entry.getKey();
             SpawnerData data = entry.getValue();
             String key = loc.getWorld().getName() + "," + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ();

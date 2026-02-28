@@ -4,9 +4,9 @@ import net.donutsmp.spawners.mob.SpawnerType;
 import org.bukkit.Location;
 import org.bukkit.Material;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SpawnerData {
     private Location location;
@@ -25,7 +25,7 @@ public class SpawnerData {
         this.owner = owner;
         this.type = type;
         this.stackSize = stackSize;
-        this.accumulatedDrops = new HashMap<>();
+        this.accumulatedDrops = new ConcurrentHashMap<>();
         this.accumulatedXP = 0;
     }
 
@@ -42,7 +42,9 @@ public class SpawnerData {
     public void setStackSize(int stackSize) { this.stackSize = stackSize; }
 
     public Map<Material, Long> getAccumulatedDrops() { return accumulatedDrops; }
-    public void setAccumulatedDrops(Map<Material, Long> accumulatedDrops) { this.accumulatedDrops = accumulatedDrops; }
+    public void setAccumulatedDrops(Map<Material, Long> accumulatedDrops) {
+        this.accumulatedDrops = new ConcurrentHashMap<>(accumulatedDrops);
+    }
 
     public long getAccumulatedXP() { return accumulatedXP; }
     public void setAccumulatedXP(long accumulatedXP) { this.accumulatedXP = accumulatedXP; }

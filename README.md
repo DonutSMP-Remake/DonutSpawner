@@ -17,7 +17,7 @@ A remake of the Famous DonutSMP one
 ## Installation
 
 1.  Stop your server.
-2.  Upload the `.jar` file from the `target` folder to the `plugins` folder.
+2.  Upload the `.jar` file from the `target` or the [Releases page](https://github.com/Jannes02/DonutSpawners/releases) then put it in the `plugins` folder.
 3.  Ensure **EssentialX** is installed (required for the economy system). -> https://essentialsx.net/
 4.  Start the server.
 5.  Edit `config.yml` in the `plugins/DonutSpawners/` folder to adjust prices and messages.

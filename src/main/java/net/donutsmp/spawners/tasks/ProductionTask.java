@@ -27,7 +27,6 @@ public class ProductionTask extends BukkitRunnable {
             }
             int amount = (int) (data.getStackSize() * multiplier);
             if (amount > 0) {
-                // Add drops based on mob type
                 Map<Material, Long> drops = getDropsForType(data.getType(), amount);
                 data.addDrops(drops);
                 data.addXP(amount * manager.getXPAmount());
@@ -47,7 +46,7 @@ public class ProductionTask extends BukkitRunnable {
                 break;
             case SPIDER:
                 drops.put(Material.STRING, (long) amount);
-                drops.put(Material.SPIDER_EYE, (long) (amount / 2)); // Less common
+                drops.put(Material.SPIDER_EYE, (long) (amount / 2));
                 break;
             case CREEPER:
                 drops.put(Material.GUNPOWDER, (long) amount);
@@ -91,7 +90,7 @@ public class ProductionTask extends BukkitRunnable {
                 break;
             case DROWNED:
                 drops.put(Material.ROTTEN_FLESH, (long) amount);
-                drops.put(Material.TRIDENT, (long) (amount / 10)); // Rare
+                drops.put(Material.TRIDENT, (long) (amount / 10));
                 break;
             case HUSK:
                 drops.put(Material.ROTTEN_FLESH, (long) amount);
@@ -111,13 +110,12 @@ public class ProductionTask extends BukkitRunnable {
                 drops.put(Material.EMERALD, (long) amount);
                 break;
             case EVOKER:
-                drops.put(Material.TOTEM_OF_UNDYING, (long) (amount / 10)); // Rare
+                drops.put(Material.TOTEM_OF_UNDYING, (long) (amount / 10));
                 break;
             case RAVAGER:
                 drops.put(Material.SADDLE, (long) amount);
                 break;
             case VEX:
-                // No drops
                 break;
             case GUARDIAN:
                 drops.put(Material.PRISMARINE_SHARD, (long) amount);
@@ -126,10 +124,8 @@ public class ProductionTask extends BukkitRunnable {
                 drops.put(Material.PRISMARINE_CRYSTALS, (long) amount);
                 break;
             case SILVERFISH:
-                // No drops
                 break;
             case ENDERMITE:
-                // No drops
                 break;
             case CAVE_SPIDER:
                 drops.put(Material.STRING, (long) amount);
@@ -145,10 +141,8 @@ public class ProductionTask extends BukkitRunnable {
                 drops.put(Material.SNOWBALL, (long) amount);
                 break;
             case WOLF:
-                // No drops
                 break;
             case OCELOT:
-                // No drops
                 break;
             case CAT:
                 drops.put(Material.STRING, (long) amount);
@@ -178,7 +172,6 @@ public class ProductionTask extends BukkitRunnable {
                 drops.put(Material.FEATHER, (long) amount);
                 break;
             case BAT:
-                // No drops
                 break;
             case COD:
                 drops.put(Material.COD, (long) amount);
@@ -202,13 +195,11 @@ public class ProductionTask extends BukkitRunnable {
                 drops.put(Material.SEAGRASS, (long) amount);
                 break;
             case DOLPHIN:
-                // No drops
                 break;
             case PANDA:
                 drops.put(Material.BAMBOO, (long) amount);
                 break;
             case FOX:
-                // No drops
                 break;
             case BEE:
                 drops.put(Material.HONEYCOMB, (long) amount);
@@ -233,34 +224,25 @@ public class ProductionTask extends BukkitRunnable {
                 drops.put(Material.RABBIT_FOOT, (long) (amount / 10));
                 break;
             case POLAR_BEAR:
-                // No drops
                 break;
             case AXOLOTL:
-                // No drops
                 break;
             case GOAT:
-                // No drops
                 break;
             case FROG:
-                // No drops
                 break;
             case ALLAY:
-                // No drops
                 break;
             case TADPOLE:
-                // No drops
                 break;
             case WARDEN:
                 drops.put(Material.SCULK, (long) amount);
                 break;
             case CAMEL:
-                // No drops
                 break;
             case SNIFFER:
-                // No drops
                 break;
             case ARMADILLO:
-                // No drops
                 break;
             default:
                 drops.put(type.getMaterial(), (long) amount);

@@ -13,10 +13,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.NamespacedKey;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class SpawnerGUI {
@@ -46,7 +47,7 @@ public class SpawnerGUI {
         this.totalPages = calcPages == 0 ? 1 : calcPages;
 
         String titleKey = isStorage ? "messages.gui_title_storage" : "messages.gui_title";
-        String titleFormat = plugin.getConfig().getString(titleKey, isStorage ? "&8%stack% %type% (%page%/%pages%)" : "&8%stack% %type% Spawner");
+        String titleFormat = plugin.getConfig().getString(titleKey, isStorage ? "&8%stack% %type% (%page%/%pages%)" : "&8%stack% %type% SPAWNERS");
 
         String title = ChatColor.translateAlternateColorCodes('&', titleFormat
                 .replace("%stack%", String.valueOf(data.getStackSize()))
@@ -73,22 +74,56 @@ public class SpawnerGUI {
     private void setupMain() {
         ItemStack skull = new ItemStack(data.getType().getHeadMaterial());
         ItemMeta skullMeta = skull.getItemMeta();
-        skullMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&6" + data.getStackSize() + " " + data.getType().getDisplayName().toLowerCase() + " Spawner"));
+        String spawnerNameFormat = plugin.getConfig().getString(
+                "messages.gui_spawner_item_name",
+                "&e%stack% %type% SPAWNERS"
+        );
+        skullMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', spawnerNameFormat
+                .replace("%stack%", String.valueOf(data.getStackSize()))
+                .replace("%type%", data.getType().getDisplayName().toUpperCase(Locale.ENGLISH))));
+
         List<String> lore = new ArrayList<>();
-        lore.add(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_click_to_sell", "&7• &eClick to sell items and XP")));
+        lore.add(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_click_to_sell", "&e&l•&r&fClick to sell items and collect xp")));
+
+        long storedItems = data.getAccumulatedDrops().values().stream().mapToLong(Long::longValue).sum();
+        long storageCapacity = Math.max(1L, plugin.getConfig().getLong("settings.storage_capacity", 1_000_000L));
+        double fillPercent = Math.min(100.0D, (storedItems * 100.0D) / storageCapacity);
+        String storageLine = plugin.getConfig().getString("messages.gui_storage_filled", "&estorage: &f%percent%% &eFilled")
+                .replace("%percent%", String.format(Locale.ENGLISH, "%.1f", fillPercent));
+        lore.add(ChatColor.translateAlternateColorCodes('&', storageLine));
+
         skullMeta.setLore(lore);
         skull.setItemMeta(skullMeta);
         inventory.setItem(13, skull);
 
         ItemStack storageItem = new ItemStack(Material.CHEST);
         ItemMeta storageMeta = storageItem.getItemMeta();
-        storageMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_open_storage", "&bOpen Storage")));
+        storageMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_open_storage", "&6SPAWNER STORAGE")));
+        List<String> storageLore = new ArrayList<>();
+        data.getAccumulatedDrops().entrySet().stream()
+                .filter(entry -> entry.getValue() != null && entry.getValue() > 0)
+                .sorted(Map.Entry.<Material, Long>comparingByValue(Comparator.reverseOrder()))
+                .limit(2)
+                .forEach(entry -> storageLore.add(ChatColor.translateAlternateColorCodes('&',
+                        plugin.getConfig().getString("messages.gui_storage_preview_entry", "&6%amount% &f%item%")
+                                .replace("%amount%", formatCompactAmount(entry.getValue()))
+                                .replace("%item%", capitalizeWords(entry.getKey().name())))));
+
+        if (storageLore.isEmpty()) {
+            storageLore.add(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_storage_preview_empty", "&7Empty")));
+        }
+        storageMeta.setLore(storageLore);
         storageItem.setItemMeta(storageMeta);
         inventory.setItem(11, storageItem);
 
         ItemStack xpBottle = new ItemStack(Material.EXPERIENCE_BOTTLE);
         ItemMeta xpMeta = xpBottle.getItemMeta();
-        xpMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_collect_xp", "&bCollect XP")));
+        xpMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_collect_xp", "&aCOLLECT XP")));
+        List<String> xpLore = new ArrayList<>();
+        xpLore.add(ChatColor.translateAlternateColorCodes('&',
+                plugin.getConfig().getString("messages.gui_collect_xp_points", "&a%xp% &fXP Points")
+                        .replace("%xp%", formatCompactAmountWithDecimal(data.getAccumulatedXP()))));
+        xpMeta.setLore(xpLore);
         xpBottle.setItemMeta(xpMeta);
         inventory.setItem(15, xpBottle);
     }
@@ -98,48 +133,66 @@ public class SpawnerGUI {
         NamespacedKey pageKey = new NamespacedKey(plugin, "gui_page");
         NamespacedKey targetPageKey = new NamespacedKey(plugin, "gui_target_page");
 
-        ItemStack redGlass = new ItemStack(Material.RED_STAINED_GLASS_PANE);
-        ItemMeta redMeta = redGlass.getItemMeta();
-        redMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_close", "&cClose")));
-        redMeta.getPersistentDataContainer().set(pageKey, PersistentDataType.INTEGER, page);
-        redGlass.setItemMeta(redMeta);
-        inventory.setItem(45, redGlass);
+        ItemStack backItem = new ItemStack(Material.BARRIER);
+        ItemMeta backMeta = backItem.getItemMeta();
+        List<String> backLore = new ArrayList<>();
+        backMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_back", "&cBACK")));
+        backLore.add(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_back_lore", "&fClick to return to the spawner")));
+        backMeta.getPersistentDataContainer().set(pageKey, PersistentDataType.INTEGER, page);
+        backMeta.setLore(backLore);
+        backItem.setItemMeta(backMeta);
+        inventory.setItem(45, backItem);
 
         if (page > 1) {
-            ItemStack arrow = new ItemStack(Material.ARROW);
-            ItemMeta arrowMeta = arrow.getItemMeta();
-            arrowMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_previous_page", "&ePrevious Page")));
-            arrowMeta.getPersistentDataContainer().set(targetPageKey, PersistentDataType.INTEGER, page - 1);
-            arrow.setItemMeta(arrowMeta);
-            inventory.setItem(47, arrow);
+            ItemStack previousArrow = new ItemStack(Material.ARROW);
+            ItemMeta previousMeta = previousArrow.getItemMeta();
+            previousMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_previous_page", "&aPREVIOUS")));
+            List<String> previousLore = new ArrayList<>();
+            previousLore.add(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_previous_page_lore", "&fClick to go back a page")));
+            previousMeta.setLore(previousLore);
+            previousMeta.getPersistentDataContainer().set(targetPageKey, PersistentDataType.INTEGER, page - 1);
+            previousArrow.setItemMeta(previousMeta);
+            inventory.setItem(48, previousArrow);
         }
 
-        ItemStack emerald = new ItemStack(Material.EMERALD);
-        ItemMeta emeraldMeta = emerald.getItemMeta();
-        emeraldMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_sell_items", "&aSell Items")));
-        emerald.setItemMeta(emeraldMeta);
-        inventory.setItem(48, emerald);
+        ItemStack spawnerCollectItem = new ItemStack(Material.SPECTRAL_ARROW);
+        ItemMeta spawnerCollectMeta = spawnerCollectItem.getItemMeta();
+        spawnerCollectMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_storage_collect", "&6SPAWNER")));
+        List<String> spawnerCollectLore = new ArrayList<>();
+        spawnerCollectLore.add(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_storage_collect_lore", "&fCollect your loot from the storage")));
+        spawnerCollectMeta.setLore(spawnerCollectLore);
+        spawnerCollectItem.setItemMeta(spawnerCollectMeta);
+        inventory.setItem(49, spawnerCollectItem);
+
+        if (page < totalPages) {
+            ItemStack nextArrow = new ItemStack(Material.ARROW);
+            ItemMeta nextMeta = nextArrow.getItemMeta();
+            nextMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_next_page", "&eNEXT")));
+            List<String> nextLore = new ArrayList<>();
+            nextLore.add(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_next_page_lore", "&fClick to go to next page")));
+            nextMeta.setLore(nextLore);
+            nextMeta.getPersistentDataContainer().set(targetPageKey, PersistentDataType.INTEGER, page + 1);
+            nextArrow.setItemMeta(nextMeta);
+            inventory.setItem(50, nextArrow);
+        }
 
         ItemStack dropper = new ItemStack(Material.DROPPER);
         ItemMeta dropperMeta = dropper.getItemMeta();
-        dropperMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_drop_all", "&bDrop All")));
+        dropperMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_drop_all", "&aDROP LOOT")));
+        List<String> dropLore = new ArrayList<>();
+        dropLore.add(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_drop_all_lore", "&fClick to drop all loot on the page")));
+        dropperMeta.setLore(dropLore);
         dropper.setItemMeta(dropperMeta);
-        inventory.setItem(49, dropper);
+        inventory.setItem(52, dropper);
 
         ItemStack goldIngot = new ItemStack(Material.GOLD_INGOT);
         ItemMeta goldMeta = goldIngot.getItemMeta();
-        goldMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_sell_xp", "&6Sell XP")));
+        goldMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_sell_all", "&aSELL ALL")));
+        List<String> sellAllLore = new ArrayList<>();
+        sellAllLore.add(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_sell_all_lore", "&7click to sell all mob drops!")));
+        goldMeta.setLore(sellAllLore);
         goldIngot.setItemMeta(goldMeta);
-        inventory.setItem(50, goldIngot);
-
-        if (page < totalPages) {
-            ItemStack arrow2 = new ItemStack(Material.ARROW);
-            ItemMeta arrow2Meta = arrow2.getItemMeta();
-            arrow2Meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.gui_next_page", "&eNext Page")));
-            arrow2Meta.getPersistentDataContainer().set(targetPageKey, PersistentDataType.INTEGER, page + 1);
-            arrow2.setItemMeta(arrow2Meta);
-            inventory.setItem(51, arrow2);
-        }
+        inventory.setItem(53, goldIngot);
 
         int slot = 0;
         int startIndex = (page - 1) * 45;
@@ -169,5 +222,39 @@ public class SpawnerGUI {
 
     public void open(Player player) {
         player.openInventory(inventory);
+    }
+
+    private String formatCompactAmount(long amount) {
+        if (amount >= 1_000_000) {
+            return String.format(Locale.ENGLISH, "%.1fM", amount / 1_000_000.0);
+        }
+        if (amount >= 1_000) {
+            return String.format(Locale.ENGLISH, "%.0fK", amount / 1_000.0);
+        }
+        return String.valueOf(amount);
+    }
+
+    private String formatCompactAmountWithDecimal(long amount) {
+        if (amount >= 1_000_000_000) {
+            return String.format(Locale.ENGLISH, "%.1fB", amount / 1_000_000_000.0);
+        }
+        if (amount >= 1_000_000) {
+            return String.format(Locale.ENGLISH, "%.1fM", amount / 1_000_000.0);
+        }
+        if (amount >= 1_000) {
+            return String.format(Locale.ENGLISH, "%.1fK", amount / 1_000.0);
+        }
+        return String.valueOf(amount);
+    }
+
+    private String capitalizeWords(String input) {
+        String[] parts = input.toLowerCase(Locale.ENGLISH).split("_");
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < parts.length; i++) {
+            if (parts[i].isEmpty()) continue;
+            if (i > 0) result.append(" ");
+            result.append(Character.toUpperCase(parts[i].charAt(0))).append(parts[i].substring(1));
+        }
+        return result.toString();
     }
 }

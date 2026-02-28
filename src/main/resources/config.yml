@@ -20,6 +20,7 @@ settings:
   auto_save_interval: 6000 # How often to save (in ticks, 6000 = 5 min)
   production_interval: 600 # How often spawners produce (in ticks, 600 = 30 sec)
   isolation_radius: 5 # Radius for the isolation bonus
+  storage_capacity: 1000000 # Used for the storage fill percentage in main GUI
 
 # Messages
 messages:
@@ -34,18 +35,32 @@ messages:
   spawner_broken: "&aSpawner broken."
   spawner_stacked: "&aYou stacked a spawner, now at %amount%x"
   spawner_stacked_multi: "&aYou stacked %count%x spawner, now at %amount%x"
-  gui_title: "&8%stack% %type% Spawner"
+  gui_title: "&8%stack% %type% SPAWNERS"
   gui_title_storage: "&8%stack% %type% (%page%/%pages%)"
   # GUI Items
-  gui_click_to_sell: "&7• &eClick to sell items and XP"
-  gui_open_storage: "&bOpen Storage"
-  gui_collect_xp: "&bCollect XP"
+  gui_spawner_item_name: "&e%stack% %type% SPAWNERS"
+  gui_click_to_sell: "&e&l•&r&fClick to sell items and collect xp"
+  gui_storage_filled: "&estorage: &f%percent%% &eFilled"
+  gui_open_storage: "&6SPAWNER STORAGE"
+  gui_storage_preview_entry: "&6%amount% &f%item%"
+  gui_storage_preview_empty: "&7Empty"
+  gui_collect_xp: "&aCOLLECT XP"
+  gui_collect_xp_points: "&a%xp% &fXP Points"
   gui_close: "&cClose"
-  gui_previous_page: "&ePrevious Page"
+  gui_previous_page: "&aPREVIOUS"
+  gui_previous_page_lore: "&fClick to go back a page"
+  gui_back: "&cBACK"
+  gui_back_lore: "&fClick to return to the spawner"
   gui_sell_items: "&aSell Items"
-  gui_drop_all: "&bDrop All"
+  gui_storage_collect: "&6SPAWNER"
+  gui_storage_collect_lore: "&fCollect your loot from the storage"
+  gui_drop_all: "&aDROP LOOT"
+  gui_drop_all_lore: "&fClick to drop all loot on the page"
   gui_sell_xp: "&6Sell XP"
+  gui_sell_all: "&aSELL ALL"
+  gui_sell_all_lore: "&7click to sell all mob drops!"
   gui_next_page: "&eNext Page"
+  gui_next_page_lore: "&fClick to go to next page"
 
 # Economy Prices (per item)
 prices:

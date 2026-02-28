@@ -214,16 +214,8 @@ public class SpawnerListener implements Listener {
                         }
                     }
                 } else if (slot == 45) {
-                    player.closeInventory();
-                } else if (slot == 47) {
-                    ItemStack item = event.getCurrentItem();
-                    if (item != null && item.hasItemMeta()) {
-                        Integer target = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "gui_target_page"), PersistentDataType.INTEGER);
-                        if (target != null && target > 0) {
-                            new SpawnerGUI(plugin, data, true, target).open(player);
-                        }
-                    }
-                } else if (slot == 51) {
+                    new SpawnerGUI(plugin, data, false).open(player);
+                } else if (slot == 48) {
                     ItemStack item = event.getCurrentItem();
                     if (item != null && item.hasItemMeta()) {
                         Integer target = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "gui_target_page"), PersistentDataType.INTEGER);
@@ -231,12 +223,44 @@ public class SpawnerListener implements Listener {
                             new SpawnerGUI(plugin, data, true, target).open(player);
                         }
                     }
-                } else if (slot == 48) {
-                    double sold = plugin.getEconomyHandler().sellItems(player, data.getAccumulatedDrops());
-                    data.getAccumulatedDrops().clear();
-                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.sold", "&aSold items for %money%.").replace("%money%", String.format("%.2f", sold))));
-                    new SpawnerGUI(plugin, data, true, currentPage).open(player);
                 } else if (slot == 49) {
+                    int startIndex = (currentPage - 1) * 45;
+                    int endIndex = startIndex + 45;
+                    int index = 0;
+
+                    for (Map.Entry<Material, Long> entry : data.getAccumulatedDrops().entrySet()) {
+                        Material mat = entry.getKey();
+                        long remaining = entry.getValue();
+
+                        while (remaining > 0 && index < endIndex) {
+                            if (index >= startIndex) {
+                                int stackSize = (int) Math.min(remaining, 64);
+                                ItemStack stack = new ItemStack(mat, stackSize);
+                                HashMap<Integer, ItemStack> left = player.getInventory().addItem(stack);
+                                int added = stackSize;
+                                if (!left.isEmpty()) {
+                                    added -= left.values().stream().mapToInt(ItemStack::getAmount).sum();
+                                }
+                                if (added > 0) {
+                                    long current = data.getAccumulatedDrops().getOrDefault(mat, 0L);
+                                    data.getAccumulatedDrops().put(mat, Math.max(0, current - added));
+                                }
+                            }
+                            remaining -= 64;
+                            index++;
+                        }
+                        if (index >= endIndex) break;
+                    }
+                    new SpawnerGUI(plugin, data, true, currentPage).open(player);
+                } else if (slot == 50) {
+                    ItemStack item = event.getCurrentItem();
+                    if (item != null && item.hasItemMeta()) {
+                        Integer target = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "gui_target_page"), PersistentDataType.INTEGER);
+                        if (target != null) {
+                            new SpawnerGUI(plugin, data, true, target).open(player);
+                        }
+                    }
+                } else if (slot == 52) {
                     int startIndex = (currentPage - 1) * 45;
                     int currentIndex = 0;
                     int itemsDroppedOnPage = 0;
@@ -273,12 +297,11 @@ public class SpawnerListener implements Listener {
                         }
                     }
                     new SpawnerGUI(plugin, data, true, currentPage).open(player);
-                } else if (slot == 50) {
-                    if (data.getAccumulatedXP() > 0) {
-                        player.giveExp((int) data.getAccumulatedXP());
-                        data.setAccumulatedXP(0);
-                        new SpawnerGUI(plugin, data, true, currentPage).open(player);
-                    }
+                } else if (slot == 53) {
+                    double sold = plugin.getEconomyHandler().sellItems(player, data.getAccumulatedDrops());
+                    data.getAccumulatedDrops().clear();
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.sold", "&aSold items for %money%.").replace("%money%", String.format("%.2f", sold))));
+                    new SpawnerGUI(plugin, data, true, currentPage).open(player);
                 }
             } else {
                 if (slot == 11) {

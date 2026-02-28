@@ -60,14 +60,12 @@ public class GiveSpawnerCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
         if (args.length == 1) {
-            // Tab complete player names
             for (Player player : Bukkit.getOnlinePlayers()) {
                 if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
                     completions.add(player.getName());
                 }
             }
         } else if (args.length == 2) {
-            // Tab complete spawner types
             for (SpawnerType type : SpawnerType.values()) {
                 if (type.name().toLowerCase().startsWith(args[1].toLowerCase())) {
                     completions.add(type.name().toLowerCase());
